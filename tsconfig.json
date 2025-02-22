@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "strictNullChecks": true,
+        "declaration": true,
+        "outDir": "dist",
+        "lib": ["es2024", "dom"]
+    },
+    "files": ["src/index.ts"]
+}
