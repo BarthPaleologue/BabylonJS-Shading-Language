@@ -63,6 +63,10 @@ Then, import it in your code:
 import * as BSL from "babylonjs-shading-language";
 ```
 
+You can find the documentation of the latest version [here](https://barthpaleologue.github.io/BabylonJS-Shading-Language/).
+
+For specific versions, you can build the documentation locally with `npm run docs` and open the `docs/index.html` file in your browser.
+
 ## Missing features
 
 I only wrapped the features that I need for my own projects, you may need to use the raw API for more advanced features.
