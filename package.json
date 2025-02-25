@@ -1,6 +1,6 @@
 {
     "name": "babylonjs-shading-language",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "A thin wrapper around BabylonJS NodeMaterial to make it easier to read and write for those who don't want to use the online editor",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
