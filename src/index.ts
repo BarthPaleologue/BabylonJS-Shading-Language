@@ -20,16 +20,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+/**
+ * BSL (Babylon Shader Language) - A utility module for building node-based materials in Babylon.js
+ *
+ * This module provides a collection of helper functions to create and connect node material blocks
+ * in a more functional and concise way. It abstracts away the complexity of manually creating and
+ * connecting blocks, making shader creation more intuitive and less error-prone.
+ *
+ * The functions in this module follow a consistent pattern:
+ * - They create the necessary node material blocks
+ * - They configure the blocks with the provided options
+ * - They handle the connections between blocks
+ * - They return the relevant output connection point
+ */
+
+import { AddBlock } from "@babylonjs/core/Materials/Node/Blocks/addBlock";
 import { ArcTan2Block } from "@babylonjs/core/Materials/Node/Blocks/arcTan2Block";
+import { DivideBlock } from "@babylonjs/core/Materials/Node/Blocks/divideBlock";
 import { TextureBlock } from "@babylonjs/core/Materials/Node/Blocks/Dual/textureBlock";
 import { FragmentOutputBlock } from "@babylonjs/core/Materials/Node/Blocks/Fragment/fragmentOutputBlock";
 import { PerturbNormalBlock } from "@babylonjs/core/Materials/Node/Blocks/Fragment/perturbNormalBlock";
 import { InputBlock } from "@babylonjs/core/Materials/Node/Blocks/Input/inputBlock";
 import { LengthBlock } from "@babylonjs/core/Materials/Node/Blocks/lengthBlock";
 import { LerpBlock } from "@babylonjs/core/Materials/Node/Blocks/lerpBlock";
+import { MaxBlock } from "@babylonjs/core/Materials/Node/Blocks/maxBlock";
+import { MinBlock } from "@babylonjs/core/Materials/Node/Blocks/minBlock";
 import { MultiplyBlock } from "@babylonjs/core/Materials/Node/Blocks/multiplyBlock";
 import { PBRMetallicRoughnessBlock } from "@babylonjs/core/Materials/Node/Blocks/PBR/pbrMetallicRoughnessBlock";
 import { RemapBlock } from "@babylonjs/core/Materials/Node/Blocks/remapBlock";
+import { SmoothStepBlock } from "@babylonjs/core/Materials/Node/Blocks/smoothStepBlock";
 import { StepBlock } from "@babylonjs/core/Materials/Node/Blocks/stepBlock";
 import { SubtractBlock } from "@babylonjs/core/Materials/Node/Blocks/subtractBlock";
 import { TransformBlock } from "@babylonjs/core/Materials/Node/Blocks/transformBlock";
@@ -383,6 +402,27 @@ export function mul(
 }
 
 /**
+ * Divides the left value by the right value.
+ * @param left - The dividend value.
+ * @param right - The divisor value.
+ * @param options - Optional target options.
+ * @returns The division result as a connection point.
+ */
+export function div(
+    left: NodeMaterialConnectionPoint,
+    right: NodeMaterialConnectionPoint,
+    options?: Partial<TargetOptions>
+): NodeMaterialConnectionPoint {
+    const mulBlock = new DivideBlock("div");
+    mulBlock.target = options?.target ?? NodeMaterialBlockTargets.Neutral;
+
+    left.connectTo(mulBlock.left);
+    right.connectTo(mulBlock.right);
+
+    return mulBlock.output;
+}
+
+/**
  * Merges the given components into a vector.
  * @param x - The x component.
  * @param y - The y component.
@@ -539,7 +579,6 @@ export function vec4(
 /**
  * Splits a vec2/3/4 into its components.
  * @param inputVec - The input vec.
- * @param dim - The dimension of the input vector
  * @param options - Optional target options.
  */
 export function split(inputVec: NodeMaterialConnectionPoint, options?: Partial<TargetOptions>): VectorSplitterBlock {
@@ -572,10 +611,11 @@ export function split(inputVec: NodeMaterialConnectionPoint, options?: Partial<T
 }
 
 /**
- * Returns the xz components of a vec3 / 4.
- * @param inputVec3 - The input vec3 / 4.
- * @param dim - The dimension of the input vector
+ * Creates a vec2 using the input vector's X and Z components.
+ * Useful for projecting 3D positions onto a 2D plane.
+ * @param inputVec - The input vector (must be vec3 or vec4).
  * @param options - Optional target options.
+ * @returns A vec2 containing the X and Z components.
  */
 export function xz(
     inputVec: NodeMaterialConnectionPoint,
@@ -607,6 +647,32 @@ export function step(
     stepBlock.target = options?.target ?? NodeMaterialBlockTargets.Neutral;
 
     edge.connectTo(stepBlock.edge);
+    x.connectTo(stepBlock.value);
+
+    return stepBlock.output;
+}
+
+/**
+ * Returns the smooth step function result.
+ * The return value is 0.0 if x <= edge0, 1.0 if x >= edge1,
+ * and performs smooth Hermite interpolation between 0.0 and 1.0 when edge0 < x < edge1.
+ * @param edge0 - The lower edge of the Hermite function.
+ * @param edge1 - The upper edge of the Hermite function.
+ * @param x - The source value for interpolation.
+ * @param options - Optional target options.
+ * @returns The smoothly interpolated value.
+ */
+export function smoothstep(
+    edge0: NodeMaterialConnectionPoint,
+    edge1: NodeMaterialConnectionPoint,
+    x: NodeMaterialConnectionPoint,
+    options?: Partial<TargetOptions>
+) {
+    const stepBlock = new SmoothStepBlock("smoothstep");
+    stepBlock.target = options?.target ?? NodeMaterialBlockTargets.Neutral;
+
+    edge0.connectTo(stepBlock.edge0);
+    edge1.connectTo(stepBlock.edge1);
     x.connectTo(stepBlock.value);
 
     return stepBlock.output;
@@ -651,6 +717,27 @@ export function mix(
 }
 
 /**
+ * Adds two values together.
+ * @param left - The first value to add.
+ * @param right - The second value to add.
+ * @param options - Optional target options.
+ * @returns The sum as a connection point.
+ */
+export function add(
+    left: NodeMaterialConnectionPoint,
+    right: NodeMaterialConnectionPoint,
+    options?: Partial<TargetOptions>
+) {
+    const addBlock = new AddBlock("add");
+    addBlock.target = options?.target ?? NodeMaterialBlockTargets.Neutral;
+
+    left.connectTo(addBlock.left);
+    right.connectTo(addBlock.right);
+
+    return addBlock.output;
+}
+
+/**
  * Subtracts the right value from the left value.
  * @param left - The left value.
  * @param right - The right value to subtract.
@@ -668,6 +755,48 @@ export function sub(
     right.connectTo(subBlock.right);
 
     return subBlock.output;
+}
+
+/**
+ * Returns the minimum of two values.
+ * @param left - The first value to compare.
+ * @param right - The second value to compare.
+ * @param options - Optional target options.
+ * @returns The minimum value as a connection point.
+ */
+export function min(
+    left: NodeMaterialConnectionPoint,
+    right: NodeMaterialConnectionPoint,
+    options?: Partial<TargetOptions>
+) {
+    const minBlock = new MinBlock("min");
+    minBlock.target = options?.target ?? NodeMaterialBlockTargets.Neutral;
+
+    left.connectTo(minBlock.left);
+    right.connectTo(minBlock.right);
+
+    return minBlock.output;
+}
+
+/**
+ * Returns the maximum of two values.
+ * @param left - The first value to compare.
+ * @param right - The second value to compare.
+ * @param options - Optional target options.
+ * @returns The maximum value as a connection point.
+ */
+export function max(
+    left: NodeMaterialConnectionPoint,
+    right: NodeMaterialConnectionPoint,
+    options?: Partial<TargetOptions>
+) {
+    const maxBlock = new MaxBlock("max");
+    maxBlock.target = options?.target ?? NodeMaterialBlockTargets.Neutral;
+
+    left.connectTo(maxBlock.left);
+    right.connectTo(maxBlock.right);
+
+    return maxBlock.output;
 }
 
 /**
