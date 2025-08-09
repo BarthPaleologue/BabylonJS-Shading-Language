@@ -3,7 +3,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
     {
-        ignores: ["node_modules", "eslint.config.mjs", "dist", "docs"]
+        ignores: ["node_modules", "eslint.config.mjs", "dist", "docs"],
     },
     eslint.configs.recommended,
     tseslint.configs.strictTypeChecked,
@@ -11,8 +11,8 @@ export default tseslint.config(
         languageOptions: {
             parserOptions: {
                 projectService: true,
-                tsconfigRootDir: import.meta.dirname
-            }
-        }
-    }
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+    },
 );
